@@ -476,7 +476,7 @@ class DEM:
                 must be same crs as dem
             interpolated : bool
                 default True. If True then the elevation is bicubic interpolated.
-        
+
         Returns
         -------
             elevation : float
@@ -569,7 +569,7 @@ class DEM:
 
         return e
 
-    def elevation_profile(self, line: Union[LineString, GeoSeries], distance: float = 10, interpolated: bool = True) \
+    def elevation_profile(self, line: Union[LineString, GeoSeries], num_points: int, distance: float = 10, interpolated: bool = True) \
             -> ElevationProfile:
         """
         Parameters
@@ -577,11 +577,13 @@ class DEM:
             line : LineString or GeoSeries
                 either shapely linestring, must be same crs as dem, or geopandas series with 1 linestring entry the crs
                 is converted automatically
+            num_points : int
+                Fixed number of sample points along LineString instead use a fixed distance between sample points.
             distance : float
                 default 10. The distance between the sample points on the line. Last distance may be shorter.
             interpolated : bool
                 if True, then the elevation is bicubic interpolated
-        
+
         Returns
         -------
             ndarray
@@ -589,6 +591,12 @@ class DEM:
                 x and y coords in CRS of dem
                 all arrays have same length
         """
+
+        if num_points is None and distance is None:
+            distance = 10.0
+
+        if num_points is not None and distance is not None:
+            raise "Cannot use num_points and distance at same time"
 
         if isinstance(line, gpd.GeoSeries):
             if line.crs.to_epsg() != self.crs.to_epsg():
@@ -598,7 +606,11 @@ class DEM:
 
         # 3. process the line to obtain evenly spaced sample points along the line
         # https://stackoverflow.com/questions/62990029/how-to-get-equally-spaced-points-on-a-line-in-shapely
-        distances = np.arange(0, line.length, distance)
+        if num_points is not None:
+            distances = np.linspace(0, line.length, num=num_points)
+        else:
+            distances = np.arange(0, line.length, distance)
+
         sample_points = [line.interpolate(d) for d in distances] + [line.boundary[1]]
 
         sample_point_x_coords = []
