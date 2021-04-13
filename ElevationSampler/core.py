@@ -569,7 +569,7 @@ class DEM:
 
         return e
 
-    def elevation_profile(self, line: Union[LineString, GeoSeries], num_points: int, distance: float = 10, interpolated: bool = True) \
+    def elevation_profile(self, line: Union[LineString, GeoSeries], num_points: int = None, distance: float = 10, interpolated: bool = True) \
             -> ElevationProfile:
         """
         Parameters
